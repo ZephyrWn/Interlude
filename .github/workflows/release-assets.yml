@@ -1,0 +1,80 @@
+name: Release assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build from
+        required: true
+        default: v0.8.0
+      version:
+        description: Version without leading v
+        required: true
+        default: 0.8.0
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        run: dotnet build Interlude.sln -c Release
+
+      - name: Test
+        run: dotnet run --project tests\Interlude.Tests\Interlude.Tests.csproj -c Release
+
+      - name: Publish
+        run: >
+          dotnet publish src\Interlude\Interlude.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:EnableCompressionInSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=None
+          -p:DebugSymbols=false
+          -p:PublishTrimmed=false
+          -p:SatelliteResourceLanguages=zh-Hans%3Ben
+          -o artifacts\publish\win-x64
+
+      - name: Package assets
+        shell: pwsh
+        run: |
+          $assetName = "Interlude-${{ inputs.tag }}-win-x64"
+          $assetName = $assetName -replace "Interlude-v", "Interlude-v"
+          New-Item -ItemType Directory -Path artifacts\release\$assetName -Force | Out-Null
+          Copy-Item artifacts\publish\win-x64\Interlude.exe artifacts\release\$assetName.exe -Force
+          Copy-Item artifacts\publish\win-x64\Interlude.exe artifacts\release\$assetName\Interlude.exe -Force
+          Compress-Archive -LiteralPath artifacts\release\$assetName -DestinationPath artifacts\release\$assetName.zip -Force
+          $files = @("$assetName.exe", "$assetName.zip")
+          $lines = foreach ($file in $files) {
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path artifacts\release $file)).Hash.ToLowerInvariant()
+            "$hash  $file"
+          }
+          $lines | Set-Content -LiteralPath artifacts\release\SHA256SUMS.txt -Encoding ascii
+
+      - name: Upload release assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ inputs.tag }}" `
+            artifacts\release\Interlude-${{ inputs.tag }}-win-x64.exe `
+            artifacts\release\Interlude-${{ inputs.tag }}-win-x64.zip `
+            artifacts\release\SHA256SUMS.txt `
+            --repo "${{ github.repository }}" `
+            --clobber
