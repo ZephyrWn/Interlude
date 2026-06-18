@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interlude", "src\Interlude\Interlude.csproj", "{D6F8BB72-B674-4F74-B09B-95C5C6E07A3B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interlude.Tests", "tests\Interlude.Tests\Interlude.Tests.csproj", "{5EF9FA55-7ED7-43F7-A2BD-6052D827586C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D6F8BB72-B674-4F74-B09B-95C5C6E07A3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6F8BB72-B674-4F74-B09B-95C5C6E07A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6F8BB72-B674-4F74-B09B-95C5C6E07A3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6F8BB72-B674-4F74-B09B-95C5C6E07A3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EF9FA55-7ED7-43F7-A2BD-6052D827586C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EF9FA55-7ED7-43F7-A2BD-6052D827586C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EF9FA55-7ED7-43F7-A2BD-6052D827586C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EF9FA55-7ED7-43F7-A2BD-6052D827586C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

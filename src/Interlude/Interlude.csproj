@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Interlude</AssemblyName>
+    <RootNamespace>Interlude</RootNamespace>
+    <Version>0.8.0</Version>
+    <AssemblyVersion>0.8.0.0</AssemblyVersion>
+    <FileVersion>0.8.0.0</FileVersion>
+    <ApplicationIcon>Assets\interlude.ico</ApplicationIcon>
+    <PublishSingleFile>false</PublishSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\interlude-logo.png" />
+    <Resource Include="Assets\interlude.ico" />
+  </ItemGroup>
+
+  <Target Name="ValidateReleasePublishMode" BeforeTargets="Publish">
+    <Error Condition="'$(RuntimeIdentifier)' != 'win-x64'"
+           Text="Interlude release publishing must target Windows x64. Use: dotnet publish src/Interlude/Interlude.csproj -c Release -r win-x64 --self-contained true" />
+    <Error Condition="'$(SelfContained)' != 'true'"
+           Text="Interlude release publishing must be self-contained so it works fully offline on machines without .NET. Use: dotnet publish src/Interlude/Interlude.csproj -c Release -r win-x64 --self-contained true" />
+  </Target>
+</Project>
