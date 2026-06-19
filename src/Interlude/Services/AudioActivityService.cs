@@ -150,15 +150,12 @@ public sealed class AudioActivityService
         _ = sessionControl.GetState(out var state);
 
         var processId = 0;
-        var isSystemSound = false;
         if (sessionControl is IAudioSessionControl2 sessionControl2)
         {
             if (sessionControl2.GetProcessId(out var pid) >= 0)
             {
                 processId = unchecked((int)pid);
             }
-
-            isSystemSound = sessionControl2.IsSystemSoundsSession() == 0;
         }
 
         var peak = 0.0f;
@@ -169,6 +166,8 @@ public sealed class AudioActivityService
 
         var identity = ProcessInfoResolver.Resolve(processId);
         var normalizedName = PlayerIdentityResolver.NormalizeProcessName(identity.ProcessName);
+        var isSystemSound = processId <= 0 ||
+            normalizedName.Equals("System Sounds", StringComparison.OrdinalIgnoreCase);
 
         var isOwnProcess = processId == Environment.ProcessId;
         var sessionInfo = new AudioSessionInfo

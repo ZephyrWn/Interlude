@@ -2,7 +2,9 @@ namespace Interlude.Models;
 
 public sealed class AppSettings
 {
-    public int SchemaVersion { get; set; } = 1;
+    private const int CurrentSchemaVersion = 4;
+
+    public int SchemaVersion { get; set; } = CurrentSchemaVersion;
 
     public string Language { get; set; } = string.Empty;
 
@@ -36,13 +38,30 @@ public sealed class AppSettings
 
     public void Normalize()
     {
-        SchemaVersion = 1;
+        var loadedSchemaVersion = SchemaVersion;
+        SchemaVersion = CurrentSchemaVersion;
         Language = AppLanguage.Normalize(Language, allowUnselected: true);
         TargetPlayer ??= new TargetPlayerConfig();
         Detection ??= new DetectionSettings();
         ExcludedProcesses ??= [];
         IgnoredApplications ??= [];
         MainWindowPlacement ??= new WindowPlacementSettings();
+
+        if (loadedSchemaVersion < 2 && Detection.Mode == DetectionMode.MediaPlayback)
+        {
+            Detection.Mode = DetectionMode.Hybrid;
+        }
+
+        if (loadedSchemaVersion < 3 && Detection.StartConfirmMs == 100)
+        {
+            Detection.StartConfirmMs = 0;
+        }
+
+        if (loadedSchemaVersion < 4 &&
+            Detection.Mode is DetectionMode.MediaPlayback or DetectionMode.Hybrid)
+        {
+            Detection.Mode = DetectionMode.AudioPeak;
+        }
 
         TargetPlayer.Normalize();
         Detection.Normalize();

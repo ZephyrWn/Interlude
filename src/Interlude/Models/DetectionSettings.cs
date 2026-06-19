@@ -2,13 +2,13 @@ namespace Interlude.Models;
 
 public sealed class DetectionSettings
 {
-    public DetectionMode Mode { get; set; } = DetectionMode.MediaPlayback;
+    public DetectionMode Mode { get; set; } = DetectionMode.AudioPeak;
 
     public int PollIntervalMs { get; set; } = 50;
 
     public double StartThreshold { get; set; } = 0.005;
 
-    public int StartConfirmMs { get; set; } = 100;
+    public int StartConfirmMs { get; set; } = 0;
 
     public int SilenceConfirmMs { get; set; } = 300;
 

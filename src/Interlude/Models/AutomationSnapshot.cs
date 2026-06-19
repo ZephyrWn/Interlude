@@ -14,7 +14,7 @@ public sealed class AutomationSnapshot
 
     public string TriggeringProcesses { get; init; } = string.Empty;
 
-    public DetectionMode DetectionMode { get; init; } = DetectionMode.Hybrid;
+    public DetectionMode DetectionMode { get; init; } = DetectionMode.AudioPeak;
 
     public bool StartWithWindows { get; init; }
 

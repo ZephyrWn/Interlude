@@ -18,7 +18,12 @@ internal static class Program
             ("target exit clears pausedByUs", TargetExitClearsPausedByUs),
             ("target restart does not auto-play", TargetRestartDoesNotAutoPlay),
             ("pause failure does not set pausedByUs", PauseFailureDoesNotSetPausedByUs),
-            ("play failure clears automation ownership safely", PlayFailureClearsOwnership)
+            ("play failure clears automation ownership safely", PlayFailureClearsOwnership),
+            ("default detection mode is audio peak", DefaultDetectionModeIsAudioPeak),
+            ("default start confirmation is immediate", DefaultStartConfirmationIsImmediate),
+            ("version one media playback default migrates to audio peak", VersionOneMediaPlaybackDefaultMigratesToAudioPeak),
+            ("version two start confirmation default migrates to immediate", VersionTwoStartConfirmationDefaultMigratesToImmediate),
+            ("version three hybrid default migrates to audio peak", VersionThreeHybridDefaultMigratesToAudioPeak)
         };
 
         var failures = 0;
@@ -264,6 +269,61 @@ internal static class Program
         AssertEqual(AutomationState.Idle, machine.State);
         AssertFalse(machine.PausedByUs);
         AssertEqual(AutomationStepAction.PlayFailed, result.Action);
+    }
+
+    private static Task DefaultDetectionModeIsAudioPeak()
+    {
+        var settings = AppSettings.CreateDefault();
+        settings.Normalize();
+
+        AssertEqual(4, settings.SchemaVersion);
+        AssertEqual(DetectionMode.AudioPeak, settings.Detection.Mode);
+        return Task.CompletedTask;
+    }
+
+    private static Task DefaultStartConfirmationIsImmediate()
+    {
+        var settings = AppSettings.CreateDefault();
+        settings.Normalize();
+
+        AssertEqual(0, settings.Detection.StartConfirmMs);
+        return Task.CompletedTask;
+    }
+
+    private static Task VersionOneMediaPlaybackDefaultMigratesToAudioPeak()
+    {
+        var settings = AppSettings.CreateDefault();
+        settings.SchemaVersion = 1;
+        settings.Detection.Mode = DetectionMode.MediaPlayback;
+        settings.Normalize();
+
+        AssertEqual(4, settings.SchemaVersion);
+        AssertEqual(DetectionMode.AudioPeak, settings.Detection.Mode);
+        return Task.CompletedTask;
+    }
+
+    private static Task VersionTwoStartConfirmationDefaultMigratesToImmediate()
+    {
+        var settings = AppSettings.CreateDefault();
+        settings.SchemaVersion = 2;
+        settings.Detection.StartConfirmMs = 100;
+        settings.Normalize();
+
+        AssertEqual(4, settings.SchemaVersion);
+        AssertEqual(0, settings.Detection.StartConfirmMs);
+        return Task.CompletedTask;
+    }
+
+    private static Task VersionThreeHybridDefaultMigratesToAudioPeak()
+    {
+        var settings = AppSettings.CreateDefault();
+        settings.SchemaVersion = 3;
+        settings.Detection.Mode = DetectionMode.Hybrid;
+        settings.Normalize();
+
+        AssertEqual(4, settings.SchemaVersion);
+        AssertEqual(DetectionMode.AudioPeak, settings.Detection.Mode);
+        return Task.CompletedTask;
     }
 
     private static async Task<AutomationStateMachine> CreateIdleMachine()

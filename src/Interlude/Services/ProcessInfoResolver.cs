@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Collections.Concurrent;
 
 namespace Interlude.Services;
 
@@ -10,11 +11,18 @@ internal sealed record ProcessIdentity(
 
 internal static class ProcessInfoResolver
 {
+    private static readonly ConcurrentDictionary<int, ProcessIdentity> Cache = new();
+
     public static ProcessIdentity Resolve(int processId)
     {
         if (processId <= 0)
         {
             return new ProcessIdentity(0, "System Sounds", "System Sounds", string.Empty);
+        }
+
+        if (Cache.TryGetValue(processId, out var cached))
+        {
+            return cached;
         }
 
         try
@@ -23,11 +31,15 @@ internal static class ProcessInfoResolver
             var processName = PlayerIdentityResolver.NormalizeProcessName(process.ProcessName);
             var executablePath = TryGetExecutablePath(process);
             var displayName = ResolveDisplayName(process, executablePath, processName);
-            return new ProcessIdentity(processId, processName, displayName, executablePath);
+            var identity = new ProcessIdentity(processId, processName, displayName, executablePath);
+            Cache[processId] = identity;
+            return identity;
         }
         catch
         {
-            return new ProcessIdentity(processId, $"PID {processId}", $"PID {processId}", string.Empty);
+            var identity = new ProcessIdentity(processId, $"PID {processId}", $"PID {processId}", string.Empty);
+            Cache[processId] = identity;
+            return identity;
         }
     }
 

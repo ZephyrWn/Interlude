@@ -5,8 +5,8 @@ namespace Interlude.Services;
 
 public sealed class AudioSessionVolumeService
 {
-    public static readonly TimeSpan DefaultFadeDuration = TimeSpan.FromMilliseconds(500);
-    private const int FadeSteps = 20;
+    public static readonly TimeSpan DefaultFadeDuration = TimeSpan.FromMilliseconds(120);
+    private const int FadeSteps = 8;
 
     private readonly IgnoredApplicationMatcher _matcher;
     private readonly LoggingService _log;
@@ -53,24 +53,40 @@ public sealed class AudioSessionVolumeService
         TimeSpan duration,
         CancellationToken cancellationToken = default)
     {
-        var touched = false;
-        var delay = TimeSpan.FromMilliseconds(Math.Max(10, duration.TotalMilliseconds / FadeSteps));
-
-        for (var step = 0; step <= FadeSteps; step++)
+        var sessions = EnumerateTargetVolumes(settings);
+        if (sessions.Count == 0)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var progress = (float)step / FadeSteps;
-            var eased = progress * progress * (3 - (2 * progress));
-            var volume = Clamp01(from + ((to - from) * eased));
-            touched |= await SetTargetVolumeAsync(settings, volume, cancellationToken);
-
-            if (step < FadeSteps)
-            {
-                await Task.Delay(delay, cancellationToken);
-            }
+            return false;
         }
 
-        return touched;
+        var delay = TimeSpan.FromMilliseconds(Math.Max(5, duration.TotalMilliseconds / FadeSteps));
+
+        try
+        {
+            for (var step = 0; step <= FadeSteps; step++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var progress = (float)step / FadeSteps;
+                var eased = progress * progress * (3 - (2 * progress));
+                var volume = Clamp01(from + ((to - from) * eased));
+
+                foreach (var session in sessions)
+                {
+                    SetTargetVolume(session, volume);
+                }
+
+                if (step < FadeSteps)
+                {
+                    await Task.Delay(delay, cancellationToken);
+                }
+            }
+
+            return true;
+        }
+        finally
+        {
+            ReleaseVolumeSessions(sessions);
+        }
     }
 
     private bool SetTargetVolume(AppSettings settings, float volume)
@@ -80,8 +96,7 @@ public sealed class AudioSessionVolumeService
         {
             try
             {
-                var eventContext = Guid.Empty;
-                session.VolumeControl.SetMasterVolume(Clamp01(volume), ref eventContext);
+                SetTargetVolume(session, volume);
             }
             catch (Exception ex)
             {
@@ -94,6 +109,12 @@ public sealed class AudioSessionVolumeService
         }
 
         return sessions.Count > 0;
+    }
+
+    private static void SetTargetVolume(TargetVolumeSession session, float volume)
+    {
+        var eventContext = Guid.Empty;
+        session.VolumeControl.SetMasterVolume(Clamp01(volume), ref eventContext);
     }
 
     private List<TargetVolumeSession> EnumerateTargetVolumes(AppSettings settings)
