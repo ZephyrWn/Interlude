@@ -24,7 +24,9 @@ internal static class Program
             ("version one media playback default remains media playback", VersionOneMediaPlaybackDefaultRemainsMediaPlayback),
             ("version two start confirmation default migrates to immediate", VersionTwoStartConfirmationDefaultMigratesToImmediate),
             ("version three hybrid default migrates to media playback", VersionThreeHybridDefaultMigratesToMediaPlayback),
-            ("version four audio peak default migrates to media playback", VersionFourAudioPeakDefaultMigratesToMediaPlayback)
+            ("version four audio peak default migrates to media playback", VersionFourAudioPeakDefaultMigratesToMediaPlayback),
+            ("QQ and WeChat audio sessions are media fallbacks", MessagingAudioSessionsAreMediaFallbacks),
+            ("unrelated audio sessions are not media fallbacks", UnrelatedAudioSessionsAreNotMediaFallbacks)
         };
 
         var failures = 0;
@@ -336,6 +338,23 @@ internal static class Program
 
         AssertEqual(5, settings.SchemaVersion);
         AssertEqual(DetectionMode.MediaPlayback, settings.Detection.Mode);
+        return Task.CompletedTask;
+    }
+
+    private static Task MessagingAudioSessionsAreMediaFallbacks()
+    {
+        AssertTrue(MediaAudioFallbackMatcher.IsSupportedProcess("QQ.exe"));
+        AssertTrue(MediaAudioFallbackMatcher.IsSupportedProcess("qqnt"));
+        AssertTrue(MediaAudioFallbackMatcher.IsSupportedProcess("WeChat.exe"));
+        AssertTrue(MediaAudioFallbackMatcher.IsSupportedProcess("weixin"));
+        return Task.CompletedTask;
+    }
+
+    private static Task UnrelatedAudioSessionsAreNotMediaFallbacks()
+    {
+        AssertFalse(MediaAudioFallbackMatcher.IsSupportedProcess("msedge.exe"));
+        AssertFalse(MediaAudioFallbackMatcher.IsSupportedProcess("QQMusic.exe"));
+        AssertFalse(MediaAudioFallbackMatcher.IsSupportedProcess(string.Empty));
         return Task.CompletedTask;
     }
 

@@ -272,14 +272,32 @@ public sealed class AutomationEngine : IDisposable
         var audioSessions = Array.Empty<AudioSessionInfo>();
         var rawActive = false;
 
-        if (settings.Detection.Mode is DetectionMode.AudioPeak or DetectionMode.Hybrid)
+        if (settings.Detection.Mode is
+            DetectionMode.AudioPeak or
+            DetectionMode.MediaPlayback or
+            DetectionMode.Hybrid)
         {
             var audio = await _audioActivityService.GetInterruptionSnapshotAsync(
                 settings,
                 cancellationToken);
             audioSessions = audio.AudioSessions.ToArray();
-            triggerNames.AddRange(audio.TriggeringProcesses);
-            rawActive |= audio.RawActive;
+
+            if (settings.Detection.Mode is DetectionMode.AudioPeak or DetectionMode.Hybrid)
+            {
+                triggerNames.AddRange(audio.TriggeringProcesses);
+                rawActive |= audio.RawActive;
+            }
+            else
+            {
+                // QQ and WeChat play voice messages and embedded videos through Core Audio,
+                // but do not publish a Windows media session. Treat their audible sessions
+                // as a compatibility fallback without broadening media mode to every sound.
+                var mediaAudioFallbacks = audio.TriggeringProcesses
+                    .Where(MediaAudioFallbackMatcher.IsSupportedProcess)
+                    .ToArray();
+                triggerNames.AddRange(mediaAudioFallbacks.Select(name => $"Media audio: {name}"));
+                rawActive |= mediaAudioFallbacks.Length > 0;
+            }
         }
 
         if (settings.Detection.Mode is DetectionMode.MediaPlayback or DetectionMode.Hybrid)
