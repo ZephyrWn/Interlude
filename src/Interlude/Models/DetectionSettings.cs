@@ -2,7 +2,7 @@ namespace Interlude.Models;
 
 public sealed class DetectionSettings
 {
-    public DetectionMode Mode { get; set; } = DetectionMode.AudioPeak;
+    public DetectionMode Mode { get; set; } = DetectionMode.MediaPlayback;
 
     public int PollIntervalMs { get; set; } = 50;
 

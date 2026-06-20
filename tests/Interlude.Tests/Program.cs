@@ -19,11 +19,12 @@ internal static class Program
             ("target restart does not auto-play", TargetRestartDoesNotAutoPlay),
             ("pause failure does not set pausedByUs", PauseFailureDoesNotSetPausedByUs),
             ("play failure clears automation ownership safely", PlayFailureClearsOwnership),
-            ("default detection mode is audio peak", DefaultDetectionModeIsAudioPeak),
+            ("default detection mode is media playback", DefaultDetectionModeIsMediaPlayback),
             ("default start confirmation is immediate", DefaultStartConfirmationIsImmediate),
-            ("version one media playback default migrates to audio peak", VersionOneMediaPlaybackDefaultMigratesToAudioPeak),
+            ("version one media playback default remains media playback", VersionOneMediaPlaybackDefaultRemainsMediaPlayback),
             ("version two start confirmation default migrates to immediate", VersionTwoStartConfirmationDefaultMigratesToImmediate),
-            ("version three hybrid default migrates to audio peak", VersionThreeHybridDefaultMigratesToAudioPeak)
+            ("version three hybrid default migrates to media playback", VersionThreeHybridDefaultMigratesToMediaPlayback),
+            ("version four audio peak default migrates to media playback", VersionFourAudioPeakDefaultMigratesToMediaPlayback)
         };
 
         var failures = 0;
@@ -271,13 +272,13 @@ internal static class Program
         AssertEqual(AutomationStepAction.PlayFailed, result.Action);
     }
 
-    private static Task DefaultDetectionModeIsAudioPeak()
+    private static Task DefaultDetectionModeIsMediaPlayback()
     {
         var settings = AppSettings.CreateDefault();
         settings.Normalize();
 
-        AssertEqual(4, settings.SchemaVersion);
-        AssertEqual(DetectionMode.AudioPeak, settings.Detection.Mode);
+        AssertEqual(5, settings.SchemaVersion);
+        AssertEqual(DetectionMode.MediaPlayback, settings.Detection.Mode);
         return Task.CompletedTask;
     }
 
@@ -290,15 +291,15 @@ internal static class Program
         return Task.CompletedTask;
     }
 
-    private static Task VersionOneMediaPlaybackDefaultMigratesToAudioPeak()
+    private static Task VersionOneMediaPlaybackDefaultRemainsMediaPlayback()
     {
         var settings = AppSettings.CreateDefault();
         settings.SchemaVersion = 1;
         settings.Detection.Mode = DetectionMode.MediaPlayback;
         settings.Normalize();
 
-        AssertEqual(4, settings.SchemaVersion);
-        AssertEqual(DetectionMode.AudioPeak, settings.Detection.Mode);
+        AssertEqual(5, settings.SchemaVersion);
+        AssertEqual(DetectionMode.MediaPlayback, settings.Detection.Mode);
         return Task.CompletedTask;
     }
 
@@ -309,20 +310,32 @@ internal static class Program
         settings.Detection.StartConfirmMs = 100;
         settings.Normalize();
 
-        AssertEqual(4, settings.SchemaVersion);
+        AssertEqual(5, settings.SchemaVersion);
         AssertEqual(0, settings.Detection.StartConfirmMs);
         return Task.CompletedTask;
     }
 
-    private static Task VersionThreeHybridDefaultMigratesToAudioPeak()
+    private static Task VersionThreeHybridDefaultMigratesToMediaPlayback()
     {
         var settings = AppSettings.CreateDefault();
         settings.SchemaVersion = 3;
         settings.Detection.Mode = DetectionMode.Hybrid;
         settings.Normalize();
 
-        AssertEqual(4, settings.SchemaVersion);
-        AssertEqual(DetectionMode.AudioPeak, settings.Detection.Mode);
+        AssertEqual(5, settings.SchemaVersion);
+        AssertEqual(DetectionMode.MediaPlayback, settings.Detection.Mode);
+        return Task.CompletedTask;
+    }
+
+    private static Task VersionFourAudioPeakDefaultMigratesToMediaPlayback()
+    {
+        var settings = AppSettings.CreateDefault();
+        settings.SchemaVersion = 4;
+        settings.Detection.Mode = DetectionMode.AudioPeak;
+        settings.Normalize();
+
+        AssertEqual(5, settings.SchemaVersion);
+        AssertEqual(DetectionMode.MediaPlayback, settings.Detection.Mode);
         return Task.CompletedTask;
     }
 

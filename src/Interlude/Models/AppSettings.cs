@@ -2,7 +2,7 @@ namespace Interlude.Models;
 
 public sealed class AppSettings
 {
-    private const int CurrentSchemaVersion = 4;
+    private const int CurrentSchemaVersion = 5;
 
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
 
@@ -61,6 +61,11 @@ public sealed class AppSettings
             Detection.Mode is DetectionMode.MediaPlayback or DetectionMode.Hybrid)
         {
             Detection.Mode = DetectionMode.AudioPeak;
+        }
+
+        if (loadedSchemaVersion < 5 && Detection.Mode == DetectionMode.AudioPeak)
+        {
+            Detection.Mode = DetectionMode.MediaPlayback;
         }
 
         TargetPlayer.Normalize();
